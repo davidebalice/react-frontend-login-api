@@ -3,27 +3,54 @@
   height: auto;
 }
 
+.github {
+  max-width: 150px !important;
+  height: auto;
+}
+
 .logoReact {
   max-width: 70px !important;
   height: auto;
 }
 
 .logoReactTools {
-  max-width:80px !important;
+  max-width: 80px !important;
   height: auto;
-  margin-left:10px
+  margin-left: 10px;
 }
 
 .logoContainer {
   display: flex;
   align-items: center;
-  padding:21px 0 21px 0;
+  padding: 21px 0 21px 0;
 }
 
-.header{
+.header {
   -webkit-box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.23);
   box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.23);
   margin-bottom: 30px;
 }
 
+.headerContainer {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
 
+.footer {
+  width: 100%;
+  height: 40px;
+  background: #222;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.footerLink{
+  color:#fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}

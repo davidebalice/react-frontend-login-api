@@ -4,23 +4,21 @@ import Container from "react-bootstrap/Container";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import logo from "./../assets/img/logo-white.png";
+import github from "./../assets/img/github2_white.png";
 
 const Header = () => {
   return (
     <>
       <Navbar bg="dark" data-bs-theme="dark">
         <Container>
-          <Navbar.Brand href="#home">
-            {" "}
+          <Navbar.Brand href="#home" className={classes.headerContainer}>
             <div className={classes.logoContainer}>
               <img src={logo} alt="db logo" className={classes.logo} />
             </div>
+            <div className={classes.logoContainer}>
+              <img src={github} alt="github" className={classes.github} />
+            </div>
           </Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="/">Home</Nav.Link>
-            <Nav.Link href="#features">Features</Nav.Link>
-            <Nav.Link href="#pricing">Pricing</Nav.Link>
-          </Nav>
         </Container>
       </Navbar>
     </>

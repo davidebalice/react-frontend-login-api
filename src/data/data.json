@@ -4,25 +4,25 @@
       "name": "Php",
       "description": "Php api login pattern MVC Pdo Jwt",
       "github": "https://aaaaa",
-      "route": "/php"
+      "route": "/api"
     },
     {
       "name": "Facebook",
       "description": "Php",
       "github": "https://aaaaa",
-      "route": "/facebook"
+      "route": "/api"
     },
     {
       "name": "Twitter",
       "description": "Php",
       "github": "https://aaaaa",
-      "route": "/twitter"
+      "route": "/api"
     },
     {
       "name": "GitHub",
       "description": "Php",
       "github": "https://aaaaa",
-      "route": "/github"
+      "route": "/api"
     }
   ]
 }
