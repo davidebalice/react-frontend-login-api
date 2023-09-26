@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Col, Row, Form, Button, Alert } from "react-bootstrap";
 import ProductCard from "../components/Card/ProductCard";
 import Detail from "../components/Card/Detail";
@@ -20,8 +20,29 @@ const Home = () => {
   const [id, setId] = useState(1);
   const [apiCall, setApiCall] = useState("login");
   const [backend, setBackend] = useState("php");
+  const [endpoint, setEndpoint] = useState(
+    "https://api-login-php.davidebalice.dev"
+  );
   const [viewResult, setViewResult] = useState(false);
   const [viewDetail, setViewDetail] = useState(false);
+
+  useEffect(() => {
+    switch (backend) {
+      case "php":
+        setEndpoint("https://api-login-php.davidebalice.dev");
+        break;
+      case "laravel":
+        setEndpoint("http://localhost:8000");
+        break;
+      case "node":
+        setEndpoint("http://localhost:8000");
+        break;
+      default:
+        break;
+    }
+  }, [backend]);
+
+  axios.defaults.baseURL = endpoint;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -114,7 +135,9 @@ const Home = () => {
       const response = await api.get(`/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setResponse(response.data);
+
       setViewResult(false);
       setViewDetail(view);
       setError(null);
@@ -319,17 +342,26 @@ const Home = () => {
                 </div>
               </div>
             )}
-            {token && (
-              <div className="token">
-                <b>token</b>: {token}
-              </div>
-            )}
-            {server && (
-              <div className="token">
-                {" "}
-                <b>backend server</b>: {server}
-              </div>
-            )}
+            <div className="responseBottom">
+              {server && (
+                <>
+                  <b>Backend server</b>: {server}
+                  <br />
+                </>
+              )}
+              {endpoint && (
+                <>
+                  <b>Endpoint</b>: {endpoint}
+                  <br />
+                </>
+              )}
+              {token && (
+                <>
+                  <b>Token</b>: {token}
+                  <br />
+                </>
+              )}
+            </div>
             {error && (
               <div className="mt-3">
                 <Alert variant="danger">Error: {error}</Alert>

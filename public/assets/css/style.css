@@ -1640,11 +1640,11 @@ hr {
   justify-content: space-between;
 }
 
-.token {
+.responseBottom {
   background: #f1f1f1;
   border: 1px solid #ccc;
   width: 100%;
-  padding: 6px;
+  padding: 10px;
   font-size: 13px;
   overflow: hidden;
   margin-top: 6px;
@@ -1852,4 +1852,3 @@ hr {
   border-bottom: 1px solid #ccc;
   padding-bottom: 8px;
 }
-
