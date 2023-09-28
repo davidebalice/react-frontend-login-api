@@ -15,10 +15,12 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [username, setUsername] = useState("mariorossi");
   const [password, setPassword] = useState("");
+  const [tecnology, setTecnology] = useState("Rest Api");
   const [token, setToken] = useState("");
-  const [server, setServer] = useState("");
   const [id, setId] = useState(1);
   const [apiCall, setApiCall] = useState("login");
+  const [server, setServer] = useState("");
+  const [serverUrl, setServerUrl] = useState("");
   const [backend, setBackend] = useState("php");
   const [endpoint, setEndpoint] = useState(
     "https://api-login-php.davidebalice.dev"
@@ -27,14 +29,50 @@ const Home = () => {
   const [viewDetail, setViewDetail] = useState(false);
 
   useEffect(() => {
+    switch (apiCall) {
+      case "login":
+        setTecnology("Rest Api");
+        setServerUrl("/api/login");
+        break;
+      case "products":
+        setTecnology("Rest Api");
+        setServerUrl("/api/products");
+        break;
+      case "product":
+        setTecnology("Rest Api");
+        setServerUrl("/api/product/" + id);
+        break;
+      case "loginGql":
+        setTecnology("GraphQl");
+        if (backend === "laravel") {
+          setServerUrl("/graphql/public");
+        }
+        if (backend === "node") {
+          setServerUrl("/graphql");
+        }
+        break;
+      case "productsGql":
+      case "productGql":
+        setTecnology("GraphQl");
+        setServerUrl("/graphql");
+        break;
+      default:
+        break;
+    }
+  }, [backend, id, serverUrl, apiCall]);
+
+  useEffect(() => {
     switch (backend) {
       case "php":
+        setToken("");
         setEndpoint("https://api-login-php.davidebalice.dev");
         break;
       case "laravel":
+        setToken("");
         setEndpoint("http://localhost:8000");
         break;
       case "node":
+        setToken("");
         setEndpoint("http://localhost:8000");
         break;
       default:
@@ -43,43 +81,6 @@ const Home = () => {
   }, [backend]);
 
   axios.defaults.baseURL = endpoint;
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const api = axios.create({
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-
-    try {
-      const requestBody = {
-        username: username,
-        password: password,
-      };
-      const apiResponse = await api.post("/api/login", requestBody);
-      setResponse(apiResponse.data);
-      setViewResult(false);
-      setViewDetail(false);
-
-      if ("token" in apiResponse.data) {
-        const token = apiResponse.data.token;
-        const server = apiResponse.data.server;
-        setToken(token);
-        setServer(server);
-      } else {
-        setToken("");
-        setServer("");
-      }
-
-      setError(null);
-    } catch (error) {
-      setError("Error during API request: " + error);
-      setResponse(null);
-    }
-  };
 
   const handleApiCall = async (event) => {
     event.preventDefault();
@@ -99,51 +100,271 @@ const Home = () => {
     setId(selectedValue);
   };
 
-  const productsRequest = async (view) => {
-    const api = axios.create({
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const loginRequest = async (event) => {
+    event.preventDefault();
 
-    try {
-      const response = await api.get("/api/products", {
-        headers: { Authorization: `Bearer ${token}` },
+    if (apiCall === "login") {
+      const api = axios.create({
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       });
-      setResponse(response.data);
-      setViewResult(view);
-      setViewDetail(false);
-      setError(null);
-    } catch (error) {
-      setError("Error during API request: " + error);
-      setResponse(null);
+
+      try {
+        const requestBody = {
+          username: username,
+          password: password,
+        };
+
+        const apiResponse = await api.post("/api/login", requestBody);
+        setResponse(apiResponse.data);
+        setViewResult(false);
+        setViewDetail(false);
+
+        if ("token" in apiResponse.data) {
+          const token = apiResponse.data.token;
+          const server = apiResponse.data.server;
+          setToken(token);
+          setServer(server);
+        } else {
+          setToken("");
+          setServer("");
+        }
+
+        setError(null);
+      } catch (error) {
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
+    } else if (apiCall === "loginGql") {
+      try {
+        let requestBody = "";
+
+        if (backend === "laravel") {
+          requestBody = {
+            query: `
+            mutation {
+              login(username: "${username}", password: "${password}")
+            }
+          `,
+            variables: {
+              username: username,
+              password: password,
+            },
+          };
+        } else if (backend === "node") {
+          requestBody = {
+            query: `
+            mutation {
+              login(username: "${username}", password: "${password}")
+              {
+                status
+                token
+                server
+              }
+            }
+          `,
+            variables: {
+              username: username,
+              password: password,
+            },
+          };
+        }
+
+        const response = await axios.post(serverUrl, requestBody, {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+
+        let apiResponse = "";
+
+        if (backend === "laravel") {
+          const splitResponse = response.data.data.login.split("\r\n\r\n");
+          apiResponse = JSON.parse(splitResponse[1]);
+        } else if (backend === "node") {
+          apiResponse = response.data.data.login;
+        }
+
+        setResponse(apiResponse);
+        setViewResult(false);
+        setViewDetail(false);
+
+        if ("token" in apiResponse) {
+          const token = apiResponse.token;
+          const server = apiResponse.server;
+          setToken(token);
+          setServer(server);
+        } else {
+          setToken("");
+          setServer("");
+        }
+
+        setError(null);
+      } catch (error) {
+        console.error("Errore nella richiesta Axios:", error);
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
     }
   };
 
-  const detailRequest = async (view) => {
-    const api = axios.create({
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    try {
-      const response = await api.get(`/api/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+  const productsRequest = async (view) => {
+    if (apiCall === "products") {
+      const api = axios.create({
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      setResponse(response.data);
+      try {
+        const response = await api.get("/api/products", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setResponse(response.data);
+        setViewResult(view);
+        setViewDetail(false);
+        setError(null);
+      } catch (error) {
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
+    } else if (apiCall === "productsGql") {
+      try {
+        let requestBody = "";
 
-      setViewResult(false);
-      setViewDetail(view);
-      setError(null);
-    } catch (error) {
-      setError("Error during API request: " + error);
-      setResponse(null);
+        if (backend === "laravel") {
+          requestBody = {
+            query: `
+            query Products {
+                products
+            }
+          `,
+          };
+        } else if (backend === "node") {
+          requestBody = {
+            query: `
+            query Products {
+              products {
+                id
+                name
+                photo
+                price
+              }
+            }
+          `,
+          };
+        }
+
+        const response = await axios.post("/graphql", requestBody, {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        let apiResponse = "";
+
+        if (backend === "laravel") {
+          apiResponse = response.data.data.products.map((productStr) =>
+            JSON.parse(productStr)
+          );
+        } else if (backend === "node") {
+          apiResponse = response.data.data.products;
+        }
+
+        setResponse(apiResponse);
+        setViewResult(view);
+        setViewDetail(false);
+        setError(null);
+      } catch (error) {
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
+    }
+  };
+
+  const productRequest = async (view) => {
+    if (apiCall === "product") {
+      const api = axios.create({
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      try {
+        const response = await api.get(`/api/products/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setResponse(response.data);
+
+        setViewResult(false);
+        setViewDetail(view);
+        setError(null);
+      } catch (error) {
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
+    } else if (apiCall === "productGql") {
+      try {
+        let requestBody = "";
+
+        if (backend === "laravel") {
+          requestBody = {
+            query: `
+            query Products {
+              product(id:${id})
+          }
+          `,
+          };
+        } else if (backend === "node") {
+          requestBody = {
+            query: `
+            query Product {
+              product(id:${id}) {
+              id
+              name
+              photo
+              price
+              description
+            }
+          }          
+          `,
+          };
+        }
+
+        const response = await axios.post("/graphql", requestBody, {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        let apiResponse;
+
+        if (backend === "laravel") {
+          apiResponse = JSON.parse(response.data.data.product);
+        } else if (backend === "node") {
+          apiResponse = response.data.data.product;
+        }
+
+        setResponse(apiResponse);
+        setViewResult(false);
+        setViewDetail(view);
+        setError(null);
+      } catch (error) {
+        setError("Error during API request: " + error);
+        setResponse(null);
+      }
     }
   };
 
@@ -173,35 +394,45 @@ const Home = () => {
               </div>
               <div className="line"></div>
               <div className="p30 pt-3">
-                <label className="label">Api call</label>
+                <label className="label">
+                  Call (<span className="tecnology">{tecnology})</span>
+                </label>
                 <Form.Select
                   custom
                   onChange={handleApiCall}
                   value={apiCall}
                   className="input"
                 >
-                  <option value="login">POST Login</option>
-                  <option value="products">GET Products</option>
-                  <option value="product">GET Product detail</option>
+                  <optgroup label="Rest Api">
+                    <option value="login">POST Login</option>
+                    <option value="products">GET Products</option>
+                    <option value="product">GET Product</option>
+                  </optgroup>
+                  <optgroup label="GraphQL">
+                    <option value="loginGql">POST Login</option>
+                    <option value="productsGql">POST Products</option>
+                    <option value="productGql">POST Product</option>
+                  </optgroup>
                 </Form.Select>
 
-                {apiCall === "product" && (
-                  <Form.Select
-                    custom
-                    onChange={handleId}
-                    value={id}
-                    className="input2"
-                  >
-                    <option value="1">id: 1</option>
-                    <option value="2">id: 2</option>
-                    <option value="3">id: 3</option>
-                    <option value="4">id: 4</option>
-                  </Form.Select>
-                )}
+                {apiCall === "product" ||
+                  (apiCall === "productGql" && (
+                    <Form.Select
+                      custom
+                      onChange={handleId}
+                      value={id}
+                      className="input2"
+                    >
+                      <option value="1">id: 1</option>
+                      <option value="2">id: 2</option>
+                      <option value="3">id: 3</option>
+                      <option value="4">id: 4</option>
+                    </Form.Select>
+                  ))}
               </div>
             </div>
 
-            {apiCall === "login" ? (
+            {apiCall === "login" || apiCall === "loginGql" ? (
               <>
                 <div className="box p30">
                   <div className="boxHeader">
@@ -217,7 +448,7 @@ const Home = () => {
                     12345678
                   </div>
 
-                  <Form onSubmit={handleSubmit} className="mt-4">
+                  <Form onSubmit={loginRequest} className="mt-4">
                     <Form.Group controlId="username">
                       <label className="label">Username</label>
                       <Form.Control
@@ -248,7 +479,7 @@ const Home = () => {
                   </Form>
                 </div>
               </>
-            ) : apiCall === "products" ? (
+            ) : apiCall === "products" || apiCall === "productsGql" ? (
               <div>
                 {token === "" ? (
                   <div className="mt-5">
@@ -275,7 +506,7 @@ const Home = () => {
                   </div>
                 )}
               </div>
-            ) : apiCall === "product" ? (
+            ) : apiCall === "product" || apiCall === "productGql" ? (
               <div>
                 {token === "" ? (
                   <div className="mt-5">
@@ -286,7 +517,7 @@ const Home = () => {
                   <div className="buttonRequestContainer">
                     <Button
                       className="buttonRequest mt-3"
-                      onClick={() => detailRequest(false)}
+                      onClick={() => productRequest(false)}
                     >
                       <AiOutlineDatabase size={20} />
                       Make Api request
@@ -294,7 +525,7 @@ const Home = () => {
 
                     <Button
                       className="buttonRequest mt-3"
-                      onClick={() => detailRequest(true)}
+                      onClick={() => productRequest(true)}
                     >
                       <LuLayoutGrid size={18} />
                       View formatted result
@@ -308,7 +539,27 @@ const Home = () => {
           </Col>
 
           <Col md={6}>
-            <p className="titleColumn mb-3">Response</p>{" "}
+            <p className="titleColumn mb-3">Response</p>
+            <div className="responseBottom">
+              {server && (
+                <>
+                  <b>Backend server</b>: {server}
+                  <br />
+                </>
+              )}
+              {endpoint && (
+                <>
+                  <b>Endpoint</b>: {`${endpoint}${serverUrl}`}
+                  <br />
+                </>
+              )}
+              {token && (
+                <>
+                  <b>Token</b>: {token.substring(0, 70) + "..."}
+                  <br />
+                </>
+              )}
+            </div>
             {response ? (
               viewResult ? (
                 <div className="productsCardContainer">
@@ -342,26 +593,7 @@ const Home = () => {
                 </div>
               </div>
             )}
-            <div className="responseBottom">
-              {server && (
-                <>
-                  <b>Backend server</b>: {server}
-                  <br />
-                </>
-              )}
-              {endpoint && (
-                <>
-                  <b>Endpoint</b>: {endpoint}
-                  <br />
-                </>
-              )}
-              {token && (
-                <>
-                  <b>Token</b>: {token}
-                  <br />
-                </>
-              )}
-            </div>
+
             {error && (
               <div className="mt-3">
                 <Alert variant="danger">Error: {error}</Alert>
