@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Container, Col, Row, Form, Button, Alert } from "react-bootstrap";
-import ProductCard from "../components/Card/ProductCard";
-import Detail from "../components/Card/Detail";
-import Description from "../components/Home/Description";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Alert, Button, Col, Container, Form, Row } from "react-bootstrap";
 import { AiOutlineDatabase } from "react-icons/ai";
 import { LuLayoutGrid } from "react-icons/lu";
+import Detail from "../components/Card/Detail";
+import ProductCard from "../components/Card/ProductCard";
+import Description from "../components/Home/Description";
 
-axios.defaults.baseURL = "https://api-login-php.davidebalice.dev";
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
 const Home = () => {
@@ -19,7 +18,7 @@ const Home = () => {
   const [token, setToken] = useState("");
   const [id, setId] = useState(1);
   const [apiCall, setApiCall] = useState("login");
-  const [server, setServer] = useState("");
+  const [server, setServer] = useState("php");
   const [serverUrl, setServerUrl] = useState("");
   const [backend, setBackend] = useState("php");
   const [endpoint, setEndpoint] = useState(
@@ -69,11 +68,11 @@ const Home = () => {
         break;
       case "laravel":
         setToken("");
-        setEndpoint("http://localhost:8000");
+        setEndpoint("https://api-login-laravel.davidebalice.dev");
         break;
       case "node":
         setToken("");
-        setEndpoint("http://localhost:8000");
+        setEndpoint("https://api-login-node.davidebalice.dev");
         break;
       default:
         break;
@@ -91,6 +90,7 @@ const Home = () => {
   const handleBackend = async (event) => {
     event.preventDefault();
     const selectedValue = event.target.value;
+    setServer(selectedValue);
     setBackend(selectedValue);
   };
 
@@ -408,27 +408,28 @@ const Home = () => {
                     <option value="products">GET Products</option>
                     <option value="product">GET Product</option>
                   </optgroup>
-                  <optgroup label="GraphQL">
-                    <option value="loginGql">POST Login</option>
-                    <option value="productsGql">POST Products</option>
-                    <option value="productGql">POST Product</option>
-                  </optgroup>
+                  {backend === "laravel" && (
+                    <optgroup label="GraphQL">
+                      <option value="loginGql">POST Login</option>
+                      <option value="productsGql">POST Products</option>
+                      <option value="productGql">POST Product</option>
+                    </optgroup>
+                  )}
                 </Form.Select>
-
-                {apiCall === "product" ||
-                  (apiCall === "productGql" && (
-                    <Form.Select
-                      custom
-                      onChange={handleId}
-                      value={id}
-                      className="input2"
-                    >
-                      <option value="1">id: 1</option>
-                      <option value="2">id: 2</option>
-                      <option value="3">id: 3</option>
-                      <option value="4">id: 4</option>
-                    </Form.Select>
-                  ))}
+                
+                {(apiCall === "product" || apiCall === "productGql") && (
+                  <Form.Select
+                    custom
+                    onChange={handleId}
+                    value={id}
+                    className="input2"
+                  >
+                    <option value="1">id: 1</option>
+                    <option value="2">id: 2</option>
+                    <option value="3">id: 3</option>
+                    <option value="4">id: 4</option>
+                  </Form.Select>
+                )}
               </div>
             </div>
 
@@ -436,8 +437,10 @@ const Home = () => {
               <>
                 <div className="box p30">
                   <div className="boxHeader">
-                    <b class="loginTitle">Login</b>
-                    {token && <b class="loginSuccess">Login successfully</b>}
+                    <b className="loginTitle">Login</b>
+                    {token && (
+                      <b className="loginSuccess">Login successfully</b>
+                    )}
                   </div>
 
                   <div className="demoData">
